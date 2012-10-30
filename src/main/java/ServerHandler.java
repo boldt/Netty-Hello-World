@@ -30,7 +30,6 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     private void handleHttpRequest(ChannelHandlerContext ctx, HttpRequest req) throws Exception {
-        // Allow only GET methods.
         if (req.getMethod() != HttpMethod.GET) {
             sendHttpResponse(ctx, req, new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN));
             return;
@@ -38,21 +37,20 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
 
         if (req.getUri().equals("/")) {
 
+            ChannelBuffer content = ServerIndexPage.getContent();
              HttpResponse res = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-             ChannelBuffer content = ServerIndexPage.getContent();
              res.setHeader(HttpHeaders.Names.CONTENT_TYPE, "text/html; charset=UTF-8");
-             //setContentLength(res, content.readableBytes());
              res.setContent(content);
+             HttpHeaders.setContentLength(res, content.readableBytes());
              sendHttpResponse(ctx, req, res);
              return;
         }
     }
 
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
-        // Generate an error page if response status code is not OK (200).
         if (res.getStatus().getCode() != 200) {
             res.setContent(ChannelBuffers.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
-            //setContentLength(res, res.getContent().readableBytes());
+            HttpHeaders.setContentLength(res, res.getContent().readableBytes());
         }
 
         // Send the response and close the connection if necessary.
