@@ -1,4 +1,4 @@
-package de.dennis_boldt.netty;
+package de.dennis_boldt.HttpServer;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -17,7 +17,7 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.util.CharsetUtil;
 
-public class ServerHandler extends SimpleChannelUpstreamHandler {
+public class HttpServerHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
@@ -42,7 +42,7 @@ public class ServerHandler extends SimpleChannelUpstreamHandler {
         }
 
         if (req.getUri().equals("/")) {
-            ChannelBuffer content = ServerIndexPage.getContent();
+            ChannelBuffer content = HttpServerIndexPage.getContent();
             HttpResponse res = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
             res.setHeader(HttpHeaders.Names.CONTENT_TYPE, "text/html; charset=UTF-8");
             res.setContent(content);

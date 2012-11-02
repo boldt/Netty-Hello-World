@@ -1,4 +1,4 @@
-package de.dennis_boldt.netty.ressoures;
+package de.dennis_boldt.netty.JerseyServer.buisinesslogic;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

@@ -1,4 +1,4 @@
-package de.dennis_boldt.netty.ressoures;
+package de.dennis_boldt.netty.JerseyServer.buisinesslogic;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;

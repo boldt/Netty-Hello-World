@@ -29,13 +29,14 @@ import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 
-public class Server {
+public class RESTServer {
 
-    private int port = 8080;
+    private int port = 0;
     private final String host = "localhost";
-    private final String resources = "de.dennis_boldt.netty";
+    private final String resources = "de.dennis_boldt.netty.JerseyServer.buisinesslogic";
+    private StringBuilder baseUri = null;
 
-    public Server(int port) {
+    public RESTServer(int port) {
         this.port = port;
     }
 
@@ -47,21 +48,8 @@ public class Server {
                         Executors.newCachedThreadPool()
                 ));
 
-        // Generate base URI
-        final StringBuilder baseUri = new StringBuilder("http://");
-        baseUri.append(host).append(":").append(String.valueOf(port))
-                .append("/");
 
-        // Jersey config
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("com.sun.jersey.config.property.packages", resources);
-        props.put("com.sun.jersey.api.json.POJOMappingFeature", "true");
-        props.put("com.devsprint.jersey.api.container.netty.baseUri", baseUri);
-        ResourceConfig resourceConfig = new PackagesResourceConfig(props);
-
-        // Generate the Jersey handler
-        final JerseyHandler jerseyHandler = ContainerFactory.createContainer(JerseyHandler.class, resourceConfig);
-        JaxRsServerChannelPipelineFactory pipeline = new JaxRsServerChannelPipelineFactory(jerseyHandler);
+        JaxRsServerChannelPipelineFactory pipeline = new JaxRsServerChannelPipelineFactory(getJerseyHandler());
         bootstrap.setPipelineFactory(pipeline);
 
         // Bind and start to accept incoming connections
@@ -70,14 +58,31 @@ public class Server {
         System.out.println("HTTP server started at " + baseUri);
     }
 
+    private JerseyHandler getJerseyHandler() {
+        // Generate base URI
+        baseUri = new StringBuilder("http://");
+        baseUri.append(host).append(":").append(String.valueOf(port)).append("/");
+
+        // Jersey config
+        final Map<String, Object> inti_params = new HashMap<String, Object>();
+        inti_params.put("com.sun.jersey.config.property.packages", resources);
+        inti_params.put("com.devsprint.jersey.api.container.netty.baseUri", baseUri);
+        inti_params.put("com.sun.jersey.api.json.POJOMappingFeature", "true");
+        ResourceConfig resourceConfig = new PackagesResourceConfig(inti_params);
+
+        // Generate the Jersey handler
+        return ContainerFactory.createContainer(JerseyHandler.class, resourceConfig);
+    }
+
+
     public static void main(String[] args) {
         int port;
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);
         } else {
-            port = 10000;
+            port = 9999;
         }
-        Server server = new Server(port);
+        RESTServer server = new RESTServer(port);
         server.start();
     }
 }
