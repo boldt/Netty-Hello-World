@@ -1,4 +1,5 @@
 package de.dennis_boldt.netty;
+
 /*
  * Copyright 2011 The Netty Project
  *
@@ -15,74 +16,73 @@ package de.dennis_boldt.netty;
  * under the License.
  */
 
-import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-
-import com.devsprint.jersey.api.container.netty.JaxRsServerChannelPipelineFactory;
-import com.devsprint.jersey.api.container.netty.JerseyHandler;
-import com.sun.jersey.api.container.ContainerFactory;
+import com.devsprint.jersey.api.container.netty.NettyServer;
+import com.devsprint.jersey.api.container.netty.NettyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 
 public class RESTServer {
 
-    private int port = 0;
-    private final String host = "localhost";
-    private final String resources = "de.dennis_boldt.netty.JerseyServer.buisinesslogic";
-    private StringBuilder baseUri = null;
+	private static final String host = "localhost";
+	private static final String RESOURCES_PACKAGE = "de.dennis_boldt.netty.JerseyServer.buisinesslogic";
 
-    public RESTServer(int port) {
-        this.port = port;
-    }
+	private static NettyServer server;
 
-    public void start() {
-        // Configure the server
-        ServerBootstrap bootstrap = new ServerBootstrap(
-                new NioServerSocketChannelFactory(
-                        Executors.newCachedThreadPool(),
-                        Executors.newCachedThreadPool()
-                ));
+	protected static void startServer(final ResourceConfig resourceConfig,
+			final URI baseUri) {
+		server = NettyServerFactory.create(resourceConfig, baseUri);
+		server.startServer();
+	}
 
+	protected static void stopServer() {
+		server.stopServer();
+	}
 
-        JaxRsServerChannelPipelineFactory pipeline = new JaxRsServerChannelPipelineFactory(getJerseyHandler());
-        bootstrap.setPipelineFactory(pipeline);
+	/**
+	 * Create an instance of <code>JerseyHandler</code>, base on class-path
+	 * scanning.
+	 * 
+	 * @param baseUri
+	 *            - base uri
+	 * @return JerseyHandler instance.
+	 */
+	private static ResourceConfig getResourceConfiguration(final String baseUri) {
+		final Map<String, Object> props = new HashMap<String, Object>();
+		props.put(PackagesResourceConfig.PROPERTY_PACKAGES, RESOURCES_PACKAGE);
+		props.put(NettyServer.PROPERTY_BASE_URI, baseUri);
+		return new PackagesResourceConfig(props);
 
-        // Bind and start to accept incoming connections
-        bootstrap.bind(new InetSocketAddress(port));
+	}
 
-        System.out.println("HTTP server started at " + baseUri);
-    }
+	public static void main(String[] args) {
+		int port;
+		if (args.length > 0) {
+			port = Integer.parseInt(args[0]);
+		} else {
+			port = 9999;
+		}
 
-    private JerseyHandler getJerseyHandler() {
-        // Generate base URI
-        baseUri = new StringBuilder("http://");
-        baseUri.append(host).append(":").append(String.valueOf(port)).append("/");
+		// create server configuration
 
-        // Jersey config
-        final Map<String, Object> inti_params = new HashMap<String, Object>();
-        inti_params.put("com.sun.jersey.config.property.packages", resources);
-        inti_params.put("com.devsprint.jersey.api.container.netty.baseUri", baseUri);
-        inti_params.put("com.sun.jersey.api.json.POJOMappingFeature", "true");
-        ResourceConfig resourceConfig = new PackagesResourceConfig(inti_params);
+		final StringBuilder baseUri = new StringBuilder("http://");
+		baseUri.append(host).append(":").append(String.valueOf(port))
+				.append("/");
+		final ResourceConfig resourceConfig = getResourceConfiguration(baseUri
+				.toString());
 
-        // Generate the Jersey handler
-        return ContainerFactory.createContainer(JerseyHandler.class, resourceConfig);
-    }
+		// start server
+		startServer(resourceConfig, URI.create(baseUri.toString()));
 
+		// add hook to stop server
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				stopServer();
+			}
 
-    public static void main(String[] args) {
-        int port;
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        } else {
-            port = 9999;
-        }
-        RESTServer server = new RESTServer(port);
-        server.start();
-    }
+		});
+	}
 }
