@@ -20,7 +20,8 @@ public class TestRessource {
 	}
 
     @GET
-    @Produces(MediaType.APPLICATION_XML)
+    //@Produces(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_JSON)
     public Object getContact(@PathParam("id") Integer id) {
         if(id > 1000) return null;
         System.out.println("GET on " + id);
